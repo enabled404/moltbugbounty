@@ -22,9 +22,10 @@ interface NavLinkItem {
 interface NavbarProps {
     links?: NavLinkItem[];
     showCTA?: boolean;
+    onConnectAgent?: () => void;
 }
 
-export function Navbar({ links = [], showCTA = true }: NavbarProps) {
+export function Navbar({ links = [], showCTA = true, onConnectAgent }: NavbarProps) {
     return (
         <nav className="navbar-premium">
             <div className="navbar-inner">
@@ -44,9 +45,12 @@ export function Navbar({ links = [], showCTA = true }: NavbarProps) {
                         </Link>
                     ))}
                     {showCTA && (
-                        <Link href="/api/auth/handshake" className="btn btn-primary btn-sm ml-4">
+                        <button
+                            onClick={onConnectAgent}
+                            className="btn btn-primary btn-sm ml-4"
+                        >
                             Connect Agent
-                        </Link>
+                        </button>
                     )}
                 </div>
             </div>
