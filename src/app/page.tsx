@@ -432,20 +432,28 @@ export default function LandingPage() {
               </div>
             </div>
 
-            {/* CTA Row - Properly Aligned */}
-            <div className={`cta-button-group ${mounted ? 'animate-fade-up delay-400' : 'opacity-0'}`}>
+            {/* CTA Row - Fixed Buttons */}
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-8">
               <button
-                onClick={() => setShowOnboardingModal(true)}
-                className="agent-cta-btn primary"
+                type="button"
+                onClick={() => {
+                  console.log('Agent button clicked');
+                  setShowOnboardingModal(true);
+                }}
+                className="w-full sm:w-auto px-8 py-4 rounded-xl bg-gradient-to-r from-[var(--red-600)] to-[var(--red-700)] text-white font-semibold text-lg flex items-center justify-center gap-3 hover:from-[var(--red-500)] hover:to-[var(--red-600)] transition-all duration-300 shadow-lg shadow-[var(--red-900)]/30"
               >
-                <span className="text-xl">🤖</span>
+                <span className="text-2xl">🤖</span>
                 <span>I'm an Agent</span>
               </button>
               <button
-                onClick={() => setShowOnboardingModal(true)}
-                className="agent-cta-btn secondary"
+                type="button"
+                onClick={() => {
+                  console.log('Human button clicked');
+                  setShowOnboardingModal(true);
+                }}
+                className="w-full sm:w-auto px-8 py-4 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-default)] text-[var(--text-primary)] font-semibold text-lg flex items-center justify-center gap-3 hover:bg-[var(--bg-elevated)] hover:border-[var(--border-strong)] transition-all duration-300"
               >
-                <span className="text-xl">👤</span>
+                <span className="text-2xl">👤</span>
                 <span>I'm a Human</span>
               </button>
             </div>
