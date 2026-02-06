@@ -1,14 +1,23 @@
 import { NextRequest } from 'next/server';
 import { createAdminClient } from './supabase';
+import { UnauthorizedError, ForbiddenError } from './errors';
 import type { Agent } from '@/types/database';
 
 // ═══════════════════════════════════════════════════════════════
-// ClawGuard - Moltbook Open API Authentication
+// ClawGuard - Moltbook Open API Authentication (S-Tier)
 // Integration with https://moltbook.com/api/v1 (Open Source)
 // NO DEVELOPER ACCESS REQUIRED - uses open registration API
 // ═══════════════════════════════════════════════════════════════
 
 const MOLTBOOK_API_BASE = 'https://www.moltbook.com/api/v1';
+const MOLTBOOK_TOKEN_PREFIX = 'moltbook_';
+const MOLTBOOK_TOKEN_LENGTH = 72; // 'moltbook_' (9) + 64 hex chars (32 bytes)
+
+// Verification code adjectives (matching Moltbook's style)
+const ADJECTIVES = [
+    'reef', 'wave', 'coral', 'shell', 'tide', 'kelp', 'foam', 'salt',
+    'deep', 'blue', 'aqua', 'pearl', 'sand', 'surf', 'cove', 'bay'
+];
 
 export interface MoltbookAgent {
     id: string;
@@ -55,8 +64,8 @@ export async function verifyAgent(request: NextRequest): Promise<AuthResult> {
 
     const token = authHeader.slice(7);
 
-    // Check if it's a Moltbook API key (moltbook_ prefix)
-    if (token.startsWith('moltbook_')) {
+    // Check if it's a Moltbook API key (strict validation)
+    if (validateMoltbookToken(token)) {
         return await verifyMoltbookApiKey(token);
     }
 
@@ -193,12 +202,52 @@ async function verifyLocalToken(token: string): Promise<AuthResult> {
 }
 
 /**
+ * Validate Moltbook API key format (strict)
+ * Must be: moltbook_ + 64 hex characters
+ */
+export function validateMoltbookToken(token: string): boolean {
+    if (!token || typeof token !== 'string') return false;
+    if (!token.startsWith(MOLTBOOK_TOKEN_PREFIX)) return false;
+    if (token.length !== MOLTBOOK_TOKEN_LENGTH) return false;
+
+    // Check hex format after prefix
+    const body = token.slice(MOLTBOOK_TOKEN_PREFIX.length);
+    return /^[0-9a-f]+$/i.test(body);
+}
+
+/**
  * Generate secure local token (64 hex chars)
  */
 export function generateLocalToken(): string {
     const array = new Uint8Array(32);
     crypto.getRandomValues(array);
     return Array.from(array).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+/**
+ * Generate human-readable verification code (Moltbook style)
+ * Example: "reef-X4B2"
+ */
+export function generateVerificationCode(): string {
+    const adjective = ADJECTIVES[Math.floor(Math.random() * ADJECTIVES.length)];
+    const array = new Uint8Array(2);
+    crypto.getRandomValues(array);
+    const suffix = Array.from(array).map(b => b.toString(16).padStart(2, '0')).join('').toUpperCase();
+    return `${adjective}-${suffix}`;
+}
+
+/**
+ * Timing-safe token comparison (prevents timing attacks)
+ */
+export function compareTokensSafe(tokenA: string, tokenB: string): boolean {
+    if (!tokenA || !tokenB) return false;
+    if (tokenA.length !== tokenB.length) return false;
+
+    let result = 0;
+    for (let i = 0; i < tokenA.length; i++) {
+        result |= tokenA.charCodeAt(i) ^ tokenB.charCodeAt(i);
+    }
+    return result === 0;
 }
 
 /**
@@ -299,3 +348,71 @@ export async function checkMoltbookClaimStatus(apiKey: string): Promise<{ claime
         return { claimed: false, error: `API error: ${error instanceof Error ? error.message : 'Unknown'}` };
     }
 }
+
+// ═══════════════════════════════════════════════════════════════
+// Additional Middleware (Moltbook-style)
+// ═══════════════════════════════════════════════════════════════
+
+/**
+ * Require agent to be claimed (verified via Moltbook)
+ * Use for sensitive operations that require verified identity
+ */
+export async function withClaimedAuth(
+    request: NextRequest,
+    handler: (request: NextRequest, agent: Agent) => Promise<Response>
+): Promise<Response> {
+    const authResult = await verifyAgent(request);
+
+    if (!authResult.success || !authResult.agent) {
+        return new UnauthorizedError(
+            authResult.error || 'Authentication required',
+            'Include Authorization: Bearer <moltbook_xxx>'
+        ).toResponse();
+    }
+
+    if (!authResult.agent.is_claimed) {
+        return new ForbiddenError(
+            'Agent not yet claimed',
+            'Have your human verify via Moltbook claim URL'
+        ).toResponse();
+    }
+
+    return handler(request, authResult.agent);
+}
+
+/**
+ * Optional authentication - doesn't fail if no token provided
+ * Use for public routes that show more data when authenticated
+ */
+export async function optionalAuth(request: NextRequest): Promise<AuthResult> {
+    const authHeader = request.headers.get('Authorization');
+
+    if (!authHeader?.startsWith('Bearer ')) {
+        return { success: false, agent: null };
+    }
+
+    const token = authHeader.slice(7);
+
+    // Try to validate but don't fail
+    try {
+        if (validateMoltbookToken(token)) {
+            return await verifyMoltbookApiKey(token);
+        }
+        return await verifyLocalToken(token);
+    } catch {
+        return { success: false, agent: null };
+    }
+}
+
+/**
+ * Wrapper for optionally authenticated routes
+ * Agent may be null if not authenticated
+ */
+export async function withOptionalAuth(
+    request: NextRequest,
+    handler: (request: NextRequest, agent: Agent | null) => Promise<Response>
+): Promise<Response> {
+    const authResult = await optionalAuth(request);
+    return handler(request, authResult.agent);
+}
+
