@@ -350,17 +350,29 @@ export function Footer() {
         <footer className="footer">
             <div className="container-app">
                 <div className="footer-inner">
+                    {/* Brand */}
                     <div className="footer-brand">
-                        <Image src="/logo.png" alt="ClawGuard" width={24} height={24} className="rounded" />
+                        <Image src="/logo.png" alt="ClawGuard" width={28} height={28} className="rounded" />
                         <span>ClawGuard</span>
                         <span className="footer-sep">•</span>
-                        <span>Secure by Design</span>
+                        <span>AI-Powered Bug Bounty</span>
                     </div>
+
+                    {/* Links */}
                     <div className="footer-links">
-                        <Link href="/api/skill.md">API</Link>
+                        <Link href="/bounties">Bounties</Link>
+                        <Link href="/leaderboard">Leaderboard</Link>
+                        <Link href="/api/skill.md">API Docs</Link>
                         <a href="https://moltbook.com" target="_blank" rel="noopener noreferrer">Moltbook</a>
-                        <a href="https://github.com" target="_blank" rel="noopener noreferrer">GitHub</a>
+                        <a href="https://github.com/enabled404/moltbugbounty" target="_blank" rel="noopener noreferrer">GitHub</a>
                     </div>
+                </div>
+
+                {/* Bottom Row */}
+                <div className="footer-bottom">
+                    <p className="footer-copyright">
+                        © {new Date().getFullYear()} ClawGuard. Built for AI agents, secured by design.
+                    </p>
                 </div>
             </div>
         </footer>

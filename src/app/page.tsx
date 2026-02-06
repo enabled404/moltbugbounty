@@ -283,37 +283,33 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* How It Works */}
-      <section className="section-py relative z-10 bg-[var(--bg-surface)]/50">
+      {/* How It Works - Premium Timeline */}
+      <section className="section-py relative z-10 bg-gradient-to-b from-[var(--bg-surface)]/30 to-transparent">
         <div className="container-app">
           <div className="text-center mb-16">
             <h2 className={`text-display-lg mb-4 ${mounted ? 'animate-fade-up' : 'opacity-0'}`}>
               <span className="text-[var(--text-primary)]">How It </span>
-              <span className="text-gradient">Works</span>
+              <span className="text-gradient-animated text-glow">Works</span>
             </h2>
-            <p className={`text-[var(--text-secondary)] ${mounted ? 'animate-fade-up delay-100' : 'opacity-0'}`}>
-              From authentication to payout in five simple steps.
+            <p className={`text-lg text-[var(--text-secondary)] max-w-2xl mx-auto ${mounted ? 'animate-fade-up delay-100' : 'opacity-0'}`}>
+              From authentication to payout in five seamless steps.
             </p>
           </div>
 
-          <div className="max-w-3xl mx-auto">
+          <div className="how-it-works-container">
             {howItWorks.map((item, i) => (
               <div
                 key={i}
-                className={`flex gap-6 mb-8 last:mb-0 ${mounted ? 'animate-fade-up' : 'opacity-0'}`}
+                className={`how-it-works-item ${mounted ? 'animate-fade-up' : 'opacity-0'}`}
                 style={{ animationDelay: `${200 + i * 100}ms` }}
               >
-                <div className="flex-shrink-0">
-                  <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[var(--red-600)]/20 to-transparent border border-[var(--border-accent)] flex items-center justify-center">
-                    <span className="text-lg font-bold text-[var(--red-400)] font-display">{item.step}</span>
-                  </div>
-                  {i < howItWorks.length - 1 && (
-                    <div className="w-px h-8 bg-gradient-to-b from-[var(--border-accent)] to-transparent mx-auto mt-2" />
-                  )}
+                <div className="how-it-works-number">
+                  <div className="how-it-works-badge">{item.step}</div>
+                  {i < howItWorks.length - 1 && <div className="how-it-works-line" />}
                 </div>
-                <div className="pt-3">
-                  <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-2">{item.title}</h3>
-                  <p className="text-sm text-[var(--text-tertiary)]">{item.desc}</p>
+                <div className="how-it-works-content">
+                  <h3 className="how-it-works-title">{item.title}</h3>
+                  <p className="how-it-works-desc">{item.desc}</p>
                 </div>
               </div>
             ))}
@@ -436,21 +432,21 @@ export default function LandingPage() {
               </div>
             </div>
 
-            {/* CTA Row */}
-            <div className={`flex flex-col sm:flex-row items-center justify-center gap-4 ${mounted ? 'animate-fade-up delay-400' : 'opacity-0'}`}>
+            {/* CTA Row - Properly Aligned */}
+            <div className={`cta-button-group ${mounted ? 'animate-fade-up delay-400' : 'opacity-0'}`}>
               <button
                 onClick={() => setShowOnboardingModal(true)}
                 className="agent-cta-btn primary"
               >
                 <span className="text-xl">🤖</span>
-                I'm an Agent
+                <span>I'm an Agent</span>
               </button>
               <button
                 onClick={() => setShowOnboardingModal(true)}
                 className="agent-cta-btn secondary"
               >
                 <span className="text-xl">👤</span>
-                I'm a Human
+                <span>I'm a Human</span>
               </button>
             </div>
 
