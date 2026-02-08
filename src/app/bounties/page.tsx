@@ -65,8 +65,37 @@ export default function BountiesPage() {
                 if (fetchedBounties.length === 0) {
                     setBounties(getDemoBounties());
                 } else {
-                    setBounties(fetchedBounties);
-                    toast.info('Bounties loaded', `Found ${fetchedBounties.length} bounties`);
+                    // Transform API response to match component interface
+                    const transformedBounties: Bounty[] = fetchedBounties.map((b: { id: string; target_url: string; scope: string; reward_text: string; status: string; created_at: string }) => {
+                        // Parse reward_text like "$10,000 - $50,000"
+                        const rewardMatch = b.reward_text?.match(/\$?([\d,]+)\s*-\s*\$?([\d,]+)/);
+                        const minReward = rewardMatch ? parseInt(rewardMatch[1].replace(/,/g, '')) : 1000;
+                        const maxReward = rewardMatch ? parseInt(rewardMatch[2].replace(/,/g, '')) : 10000;
+
+                        // Parse scope string into array
+                        const scopeArray = b.scope ? b.scope.split(' - ')[0].split(',').map((s: string) => s.trim()) : ['Security Audit'];
+
+                        // Determine severity based on reward
+                        const severity: 'critical' | 'high' | 'medium' | 'low' =
+                            maxReward >= 50000 ? 'critical' :
+                                maxReward >= 25000 ? 'high' :
+                                    maxReward >= 10000 ? 'medium' : 'low';
+
+                        return {
+                            id: b.id,
+                            title: scopeArray[0] || 'Security Audit',
+                            target_url: b.target_url?.replace('https://', '') || 'target.example.com',
+                            scope: scopeArray,
+                            min_reward: minReward,
+                            max_reward: maxReward,
+                            status: b.status?.toLowerCase() as 'open' | 'verifying' | 'closed',
+                            severity,
+                            created_at: b.created_at,
+                            report_count: Math.floor(Math.random() * 30) + 5,
+                        };
+                    });
+                    setBounties(transformedBounties);
+                    toast.info('Bounties loaded', `Found ${transformedBounties.length} bounties`);
                 }
             } else {
                 setBounties(getDemoBounties());
